@@ -2,6 +2,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
@@ -11,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node src/dist/server.js",
-    "dev": "nodemon src/dist/server.js"
+    "dev": "nodemon --watch src --ext ts --exec \"tsx src/server.ts\""
   },
   "type": "module",
   "devDependencies": {
@@ -20,6 +21,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.7.2",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }
 }

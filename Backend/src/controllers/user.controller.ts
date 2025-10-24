@@ -2,27 +2,40 @@ import type { Request, Response } from "express";
 import { userModel } from "../models/user.model.js";
 import { wrapAsync } from "../utils/tryCatchWrapper.js";
 
-// GET /api/users/:id
-export const getUserDetails = wrapAsync(async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.id; // get user ID from URL
+interface AuthenticatedRequest extends Request {
+  user?: any;
+}
 
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-
-    const user = await userModel.findById(userId)
-      .select("-passwordHash") // do not return password
-      // .populate("wishlist")    // optional: populate wishlist products
-      // .populate("orders");     // optional: populate orders
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(user);
-  } catch (error: any) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ message: "Server error" });
+export const getUserDetails = wrapAsync(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user; // This comes from the auth middleware
+  
+  if (!userId) {
+    return res.status(401).json({ message: "User not authenticated" });
   }
-})
+
+  const user = await userModel.findById(userId)
+    .select("-passwordHash") 
+    // .populate("wishlist")
+    // .populate("orders");
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.status(200).json({
+    message: "User details retrieved successfully",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      profilePicture: user.profilePicture,
+      addresses: user.addresses,
+      wishlist: user.wishlist,
+      orders: user.orders,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    }
+  });
+});
