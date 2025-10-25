@@ -3,6 +3,7 @@ import express from 'express';
 import authRoutes from './routes/auth.route.js'
 import userRoutes from './routes/user.route.js'
 import productRoutes from './routes/product.route.js'
+import cartRoutes from './routes/cart.route.js'
 // Middlewares
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv"
@@ -21,6 +22,7 @@ app.use(cookieParser())
 app.use("/api/auth", authRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/products", productRoutes)
+app.use("/api/cart", cartRoutes)
 
 connectDB().then(() => {
   app.listen(PORT, () => {
