@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { addToCartService, clearCartService, createCheckoutSession, getCartService, removeFromCartService, updateCartItemService } from "../services/cart.service.js";
+import { addToCartService, clearCartService, createCheckoutSession, getCartForStripe, getCartService, removeFromCartService, updateCartItemService } from "../services/cart.service.js";
 
 interface AuthRequest extends Request {
 	user?: string;
@@ -97,11 +97,14 @@ export const clearCart = async (req: AuthRequest, res: Response) => {
 };
 
 export const checkoutCart = async (req: AuthRequest, res: Response) => {
-	const { products } = req.body;
-
-	if (!products || !Array.isArray(products)) return res.status(400).json({ message: "Products are required" });
-
 	try {
+		const userId = req.user;
+		if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+		const products = await getCartForStripe(userId)
+		console.log(products)
+		if (!products || !Array.isArray(products)) return res.status(400).json({ message: "Products are required" });
+
 		const session = await createCheckoutSession(products);
 		res.json({ checkoutUrl: session.url });
 	} catch (error: any) {

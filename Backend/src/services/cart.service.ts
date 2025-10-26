@@ -3,6 +3,7 @@ import type { ICart } from "../models/cart.model.js";
 import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import { stripe } from "../config/stripe.config.js";
+import Stripe from "stripe";
 
 interface CartItemInput {
 	productId: string;
@@ -114,8 +115,10 @@ interface CheckoutProduct {
 	quantity: number;
 }
 
-export const createCheckoutSession = async (products: CheckoutProduct[]) => {
-	return await stripe.checkout.sessions.create({
+export const createCheckoutSession = async (
+	products: CheckoutProduct[]
+): Promise<Stripe.Checkout.Session> => {
+	return stripe.checkout.sessions.create({
 		payment_method_types: ["card"],
 		mode: "payment",
 		line_items: products.map((p) => ({
@@ -129,5 +132,22 @@ export const createCheckoutSession = async (products: CheckoutProduct[]) => {
 		success_url: "https://example.com/success",
 		cancel_url: "https://example.com/cancel",
 	});
-}
+};
+
+export const getCartForStripe = async (userId: string): Promise<CheckoutProduct[]> => {
+	const cart = await Cart.findOne({ userId }).populate(
+		"items.productId",
+		"name price images brand"
+	);
+
+	if (!cart || cart.items.length === 0) {
+		throw new Error("Cart not found or empty");
+	}
+
+	return cart.items.map((item: any) => ({
+		name: item.productId.name,
+		price: item.productId.price,
+		quantity: item.quantity,
+	}));
+};
 
