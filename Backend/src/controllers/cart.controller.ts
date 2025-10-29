@@ -1,5 +1,10 @@
 import type { Request, Response } from "express";
 import { addToCartService, clearCartService, createCheckoutSession, getCartForStripe, getCartService, removeFromCartService, updateCartItemService } from "../services/cart.service.js";
+import Stripe from 'stripe'
+import stripe from '../config/stripe.config.js'
+import dotenv from "dotenv"
+import { createOrderFromStripeSession } from "../services/order.service.js";
+dotenv.config()
 
 interface AuthRequest extends Request {
 	user?: string;
@@ -105,9 +110,38 @@ export const checkoutCart = async (req: AuthRequest, res: Response) => {
 		console.log(products)
 		if (!products || !Array.isArray(products)) return res.status(400).json({ message: "Products are required" });
 
-		const session = await createCheckoutSession(products);
+		const session = await createCheckoutSession(products, userId	);
 		res.json({ checkoutUrl: session.url });
 	} catch (error: any) {
 		res.status(500).json({ message: error.message });
 	}
 }
+
+export const webhookHandler = async (request: Request, response: Response) => {
+	let event;
+
+	try {
+		const signature = request.headers["stripe-signature"] as string;
+		event = stripe.webhooks.constructEvent(
+			request.body,
+			signature,
+			process.env.STRIPE_WEBHOOK_SECRET!
+		);
+	} catch (err: any) {
+		console.error("Webhook signature verification failed.", err.message);
+		return response.status(400).send(`Webhook Error: ${err.message}`);
+	}
+
+	switch (event.type) {
+		case "checkout.session.completed": {
+			const session = event.data.object as any;
+			console.log("Payment complete! Saving order...");
+			await createOrderFromStripeSession(session);
+			break;
+		}
+		default:
+			console.log(`Unhandled event type: ${event.type}`);
+	}
+
+	response.json({ received: true });
+};

@@ -9,15 +9,18 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv"
 // Config Files
 import { connectDB } from './config/mongo.config.js';
+import { addToCart, getCartItems, removeFromCart, updateCartItem, checkoutCart, webhookHandler } from './controllers/cart.controller.js'
 
 dotenv.config()
 
 const app = express();
-const PORT: Number = 3000;
+const PORT = 3000;
+
+app.post("/api/cart/webhooks", express.raw({ type: "application/json" }), webhookHandler)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser())
+app.use(cookieParser());
 
 app.use("/api/auth", authRoutes)
 app.use("/api/user", userRoutes)

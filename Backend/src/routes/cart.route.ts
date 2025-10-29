@@ -1,14 +1,14 @@
 import express from 'express'
-import { addToCart, getCartItems, removeFromCart, updateCartItem, checkoutCart } from '../controllers/cart.controller.js'
+import { addToCart, getCartItems, removeFromCart, updateCartItem, checkoutCart, webhookHandler } from '../controllers/cart.controller.js'
 import { authMiddleware } from '../middlewares/auth.middleware.js'
 
 const router = express.Router()
 
-router.use(authMiddleware)
-router.get("/", getCartItems)
-router.post("/add", addToCart)
-router.patch("/update", updateCartItem)
-router.delete("/remove", removeFromCart)
-router.post("/create-checkout-session", checkoutCart)
+router.get("/", authMiddleware, getCartItems)
+router.post("/add", authMiddleware, addToCart)
+router.patch("/update", authMiddleware, updateCartItem)
+router.delete("/remove", authMiddleware, removeFromCart)
+router.post("/create-checkout-session", authMiddleware, checkoutCart)
+router.post("/webhooks", webhookHandler);
 
 export default router
