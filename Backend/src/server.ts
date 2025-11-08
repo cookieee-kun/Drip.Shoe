@@ -9,7 +9,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv"
 // Config Files
 import { connectDB } from './config/mongo.config.js';
-import { addToCart, getCartItems, removeFromCart, updateCartItem, checkoutCart, webhookHandler } from './controllers/cart.controller.js'
+import { webhookHandler } from './controllers/cart.controller.js'
 
 dotenv.config()
 

@@ -107,10 +107,11 @@ export const checkoutCart = async (req: AuthRequest, res: Response) => {
 		if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
 		const products = await getCartForStripe(userId)
-		console.log(products)
+		// console.log(products)
 		if (!products || !Array.isArray(products)) return res.status(400).json({ message: "Products are required" });
 
-		const session = await createCheckoutSession(products, userId	);
+		const session = await createCheckoutSession(products, userId);
+		console.log("metadata: ", session.metadata)
 		res.json({ checkoutUrl: session.url });
 	} catch (error: any) {
 		res.status(500).json({ message: error.message });
@@ -119,7 +120,6 @@ export const checkoutCart = async (req: AuthRequest, res: Response) => {
 
 export const webhookHandler = async (request: Request, response: Response) => {
 	let event;
-
 	try {
 		const signature = request.headers["stripe-signature"] as string;
 		event = stripe.webhooks.constructEvent(
@@ -134,9 +134,13 @@ export const webhookHandler = async (request: Request, response: Response) => {
 
 	switch (event.type) {
 		case "checkout.session.completed": {
-			const session = event.data.object as any;
+			const session = event.data.object as Stripe.Checkout.Session;
+			const userId = session.metadata?.userId;
+
 			console.log("Payment complete! Saving order...");
 			await createOrderFromStripeSession(session);
+			if (userId) await clearCartService(userId)
+			else console.log("No userId in WebhookHandler route")
 			break;
 		}
 		default:

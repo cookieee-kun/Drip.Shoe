@@ -11,7 +11,7 @@ interface IOrderItem {
   updatedAt: Date;
 }
 
-interface IShippingAddress {
+export interface IShippingAddress {
   fullName: string;
   phone: string;
   addressLine1: string;
@@ -46,7 +46,7 @@ const OrderItemSchema: Schema = new Schema<IOrderItem>({
   updatedAt: { type: Date, default: Date.now }
 });
 
-const ShippingAddressSchema: Schema = new Schema<IShippingAddress>({
+export const ShippingAddressSchema: Schema = new Schema<IShippingAddress>({
   fullName: { type: String, required: true },
   phone: { type: String, required: true },
   addressLine1: { type: String, required: true },
@@ -57,7 +57,7 @@ const ShippingAddressSchema: Schema = new Schema<IShippingAddress>({
   country: { type: String, required: true }
 });
 
-const OrderSchema: Schema = new Schema<IOrder>({
+export const OrderSchema: Schema = new Schema<IOrder>({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   items: [OrderItemSchema],
   totalAmount: { type: Number, required: true },

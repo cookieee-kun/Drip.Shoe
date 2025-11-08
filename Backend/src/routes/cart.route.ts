@@ -9,6 +9,6 @@ router.post("/add", authMiddleware, addToCart)
 router.patch("/update", authMiddleware, updateCartItem)
 router.delete("/remove", authMiddleware, removeFromCart)
 router.post("/create-checkout-session", authMiddleware, checkoutCart)
-router.post("/webhooks", webhookHandler);
+// router.post("/webhooks", webhookHandler);
 
 export default router

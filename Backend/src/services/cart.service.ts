@@ -14,7 +14,7 @@ interface CartItemInput {
 export const getCartService = async (userId: string): Promise<ICart> => {
 	let cart = await Cart.findOne({ userId }).populate(
 		"items.productId",
-		"name price images brand"
+		"name price category images brand"
 	);
 
 	if (!cart) cart = new Cart({ userId, items: [] });
@@ -115,42 +115,67 @@ interface CheckoutProduct {
 	quantity: number;
 }
 
+// export const createCheckoutSession = async (
+// 	products: CheckoutProduct[],
+// 	userId: string,
+// ): Promise<Stripe.Checkout.Session> => {
+// 	const cart = await getCartService(userId);
+
+// 	return stripe.checkout.sessions.create({
+// 		payment_method_types: ["card"],
+// 		mode: "payment",
+// 		line_items: products.map((p) => ({
+// 			price_data: {
+// 				currency: "inr",
+// 				product_data: { name: p.name },
+// 				unit_amount: p.price * 100,
+// 			},
+// 			quantity: p.quantity,
+// 		})),
+// 		metadata: {
+// 			userId: userId.toString(),
+// 			cartId: cart.id,
+// 		},
+// 		success_url: "https://example.com/success",
+// 		cancel_url: "https://example.com/cancel",
+
+// 	});
+// };
+
 export const createCheckoutSession = async (
 	products: CheckoutProduct[],
 	userId: string,
 ): Promise<Stripe.Checkout.Session> => {
-	const cart = await clearCartService(userId);
+	const cart = await getCartService(userId);
 	return stripe.checkout.sessions.create({
-		payment_method_types: ["card"],
 		mode: "payment",
+		shipping_address_collection: { allowed_countries: ["IN"] },
+		phone_number_collection: { enabled: true },
+
 		line_items: products.map((p) => ({
 			price_data: {
-				currency: "usd",
+				currency: "inr",
 				product_data: { name: p.name },
-				unit_amount: p.price * 100,
+				unit_amount: Math.round(p.price * 100),
 			},
 			quantity: p.quantity,
 		})),
+
+		success_url: `${process.env.APP_URL}/order/success?session_id={CHECKOUT_SESSION_ID}`,
+		cancel_url: `${process.env.APP_URL}/cart`,
+		client_reference_id: userId,
 		metadata: {
 			userId: userId.toString(),
-			items: JSON.stringify(
-				cart.items.map((item: any) => ({
-					productId: item.productId._id,
-					title: item.productId.title,
-					quantity: item.quantity,
-					price: item.productId.price,
-				}))
-			),
+			cartId: cart.id.toString(),
 		},
-		success_url: "https://example.com/success",
-		cancel_url: "https://example.com/cancel",
 	});
 };
+
 
 export const getCartForStripe = async (userId: string): Promise<CheckoutProduct[]> => {
 	const cart = await Cart.findOne({ userId }).populate(
 		"items.productId",
-		"name price images brand"
+		"name category price images brand"
 	);
 
 	if (!cart || cart.items.length === 0) {
@@ -159,6 +184,7 @@ export const getCartForStripe = async (userId: string): Promise<CheckoutProduct[
 
 	return cart.items.map((item: any) => ({
 		name: item.productId.name,
+		category: item.productId.category,
 		price: item.productId.price,
 		quantity: item.quantity,
 	}));
