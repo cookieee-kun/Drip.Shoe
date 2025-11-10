@@ -81,7 +81,7 @@ const UserSchema = new Schema<IUser, IUserModel, IUserMethods>(
     passwordHash: { type: String, required: true },
     phone: String,
     profilePicture: String,
-    wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    wishlist: [{ type: Schema.Types.ObjectId, ref: "Product", default: [] }],
     addresses: [AddressSchema],
     orders: [{ type: Schema.Types.ObjectId, ref: "Order" }],
     role: { type: String, enum: ["User", "Admin"], default: "User" },
@@ -91,7 +91,7 @@ const UserSchema = new Schema<IUser, IUserModel, IUserMethods>(
 
 // --------------------
 // Pre-save hook: hash password
-// --------------------
+// -------------------- 
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("passwordHash")) return next();
   const salt = await bcrypt.genSalt(10);

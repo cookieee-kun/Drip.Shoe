@@ -51,3 +51,19 @@ export const login_user = wrapAsync(async (req: Request, res: Response) => {
     },
   });
 });
+
+export const logout_user = wrapAsync(async (req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    ...cookieOptions,
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+  });
+
+
+  req.user = undefined;
+
+  res.status(200).json({
+    message: "User logged out successfully",
+  });
+});
